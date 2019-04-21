@@ -18,8 +18,10 @@ namespace Greed_Algorythms
         }
 
         static int indexOfAccount = 1;
-        static double percent = 10;
-        SortedSet<Tuple<double, Edge>> Edges = new SortedSet<Tuple<double, Edge>>();
+        static double percent;
+               
+        SortedSet<double> AccountsSet = new SortedSet<double>();
+        
 
         private void btn_addAccount_Click(object sender, EventArgs e)
         {
@@ -71,8 +73,7 @@ namespace Greed_Algorythms
         private void btn_clear_Click(object sender, EventArgs e)
         {
             dgv_Accounts.Rows.Clear();
-            Edges.Clear();
-            textBox1.Clear();
+            AccountsSet.Clear();
             indexOfAccount = 1;
             txb_output.Clear();
         }
@@ -81,82 +82,34 @@ namespace Greed_Algorythms
         private void btn_findAmountMoneyToSave_Click(object sender, EventArgs e)
         {
             txb_output.Clear();
-            double weight;
-            double start;
-            double end;
-            for (int i = 0;i < dgv_Accounts.RowCount; i++)
+            try
             {
-                start = Convert.ToDouble(dgv_Accounts.Rows[i].Cells[1].Value);
-
-                for (int j = i; j < dgv_Accounts.RowCount; j++)
-                {
-                    if (i != j)
-                    {
-                        end = Convert.ToDouble(dgv_Accounts.Rows[j].Cells[1].Value);
-                        weight = ((start + end) - ((start + end) *(percent / 100)));
-                        Edges.Add(new Tuple<double,Edge>(new Edge(start, end, i, j).getWeight(percent), new Edge(start,end,i,j)));
-                    }
-                }
+                percent = Convert.ToInt32(mtb_percent.Text);
+            }
+            catch
+            {
+                MessageBox.Show("Incorrect Data" + "\r\n" + "Percent shoud be integer in range 20");
             }
 
-             /////////////////////////////
-             foreach (var edge in Edges)
+            SortedSet<double> tmpAccountsSet = AccountsSet;
+
+            for (int i = 0; i < dgv_Accounts.RowCount; i++)
             {
-                textBox1.Text += edge.ToString() + "\r\n";
+                tmpAccountsSet.Add(Convert.ToDouble(dgv_Accounts.Rows[i].Cells[1].Value));
             }
-            ////////////////////////////
-
-            int[] Comp = new int[dgv_Accounts.RowCount];
-            for(int i = 0;i< dgv_Accounts.RowCount; i++)
+            double firstMin = 0, secondMin = 0;
+            while (tmpAccountsSet.Count != 1)
             {
-                Comp[i] = i;
+                firstMin = tmpAccountsSet.Min;
+                tmpAccountsSet.Remove(tmpAccountsSet.Min);
+                secondMin = tmpAccountsSet.Min;
+                tmpAccountsSet.Remove(tmpAccountsSet.Min);
+                tmpAccountsSet.Add((firstMin + secondMin)*(1 - percent/100));
+                
             }
-
-            int startComp, endComp, a, b;
-            double Solution = 0;
-
-            for (int j = 0; j < Edges.Count; j++)
-            {
-                weight = Edges.ElementAt(j).Item1;
-                startComp = Edges.ElementAt(j).Item2.startComp;
-                endComp = Edges.ElementAt(j).Item2.endComp;            
- 
-                if (Comp[startComp] != Comp[endComp])
-                {
-                    Solution += weight;
-                    a = Comp[startComp];
-                    b = Comp[endComp];
-                    
-                    for(int i = 0;i < dgv_Accounts.RowCount; i++)
-                    {
-                        if(Comp[i] == b)
-                        {
-                            Comp[i] = a;
-                        }
-                    }
-
-                }
-
-                for (int i = 0; i < Edges.Count; i++)
-                {
-                    if(Edges.ElementAt(i).Item2.start == Edges.ElementAt(j).Item2.start || Edges.ElementAt(i).Item2.start == Edges.ElementAt(j).Item2.end)
-                    {                       
-                        Edges.Add(new Tuple<double, Edge>((new Edge(weight, Edges.ElementAt(i).Item2.end, Edges.ElementAt(i).Item2.startComp, Edges.ElementAt(i).Item2.endComp)).getWeight(percent), new Edge(weight, Edges.ElementAt(i).Item2.end, Edges.ElementAt(i).Item2.startComp, Edges.ElementAt(i).Item2.endComp)));
-                        Edges.Remove(Edges.ElementAt(i));
-                    }
-                    else if (Edges.ElementAt(i).Item2.end == Edges.ElementAt(j).Item2.start || Edges.ElementAt(i).Item2.end == Edges.ElementAt(j).Item2.end)
-                    {
-                        Edges.Add(new Tuple<double, Edge>((new Edge(Edges.ElementAt(i).Item2.start, weight, Edges.ElementAt(i).Item2.startComp, Edges.ElementAt(i).Item2.endComp)).getWeight(percent), new Edge(weight, Edges.ElementAt(i).Item2.end, Edges.ElementAt(i).Item2.startComp, Edges.ElementAt(i).Item2.endComp)));
-                        Edges.Remove(Edges.ElementAt(i));
-                    }
-
-                }
-            }
-
-            txb_output.Text = Convert.ToString(Solution);
-
+            txb_output.Text = tmpAccountsSet.Min.ToString();
+            tmpAccountsSet.Clear();
         }
 
-    
     }
 }
