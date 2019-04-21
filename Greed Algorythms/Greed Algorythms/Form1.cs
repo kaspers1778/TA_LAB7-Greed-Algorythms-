@@ -19,7 +19,7 @@ namespace Greed_Algorythms
 
         static int indexOfAccount = 1;
         static double percent = 10;
-        SortedSet<Tuple<double, int, int>> Edges = new SortedSet<Tuple<double, int, int>>();
+        SortedSet<Tuple<double, Edge>> Edges = new SortedSet<Tuple<double, Edge>>();
 
         private void btn_addAccount_Click(object sender, EventArgs e)
         {
@@ -87,13 +87,14 @@ namespace Greed_Algorythms
             for (int i = 0;i < dgv_Accounts.RowCount; i++)
             {
                 start = Convert.ToDouble(dgv_Accounts.Rows[i].Cells[1].Value);
+
                 for (int j = i; j < dgv_Accounts.RowCount; j++)
                 {
                     if (i != j)
                     {
                         end = Convert.ToDouble(dgv_Accounts.Rows[j].Cells[1].Value);
                         weight = ((start + end) - ((start + end) *(percent / 100)));
-                        Edges.Add(new Tuple<double, int, int>(weight, i, j));
+                        Edges.Add(new Tuple<double,Edge>(new Edge(start, end, i, j).getWeight(percent), new Edge(start,end,i,j)));
                     }
                 }
             }
@@ -114,24 +115,39 @@ namespace Greed_Algorythms
             int startComp, endComp, a, b;
             double Solution = 0;
 
-            foreach (var Edge in Edges)
+            for (int j = 0; j < Edges.Count; j++)
             {
-                weight = Edge.Item1;
-                startComp = Edge.Item2;
-                endComp = Edge.Item3;
-
+                weight = Edges.ElementAt(j).Item1;
+                startComp = Edges.ElementAt(j).Item2.startComp;
+                endComp = Edges.ElementAt(j).Item2.endComp;            
+ 
                 if (Comp[startComp] != Comp[endComp])
                 {
                     Solution += weight;
                     a = Comp[startComp];
-                    b = Comp[endComp]; 
-
+                    b = Comp[endComp];
+                    
                     for(int i = 0;i < dgv_Accounts.RowCount; i++)
                     {
                         if(Comp[i] == b)
                         {
                             Comp[i] = a;
                         }
+                    }
+
+                }
+
+                for (int i = 0; i < Edges.Count; i++)
+                {
+                    if(Edges.ElementAt(i).Item2.start == Edges.ElementAt(j).Item2.start || Edges.ElementAt(i).Item2.start == Edges.ElementAt(j).Item2.end)
+                    {                       
+                        Edges.Add(new Tuple<double, Edge>((new Edge(weight, Edges.ElementAt(i).Item2.end, Edges.ElementAt(i).Item2.startComp, Edges.ElementAt(i).Item2.endComp)).getWeight(percent), new Edge(weight, Edges.ElementAt(i).Item2.end, Edges.ElementAt(i).Item2.startComp, Edges.ElementAt(i).Item2.endComp)));
+                        Edges.Remove(Edges.ElementAt(i));
+                    }
+                    else if (Edges.ElementAt(i).Item2.end == Edges.ElementAt(j).Item2.start || Edges.ElementAt(i).Item2.end == Edges.ElementAt(j).Item2.end)
+                    {
+                        Edges.Add(new Tuple<double, Edge>((new Edge(Edges.ElementAt(i).Item2.start, weight, Edges.ElementAt(i).Item2.startComp, Edges.ElementAt(i).Item2.endComp)).getWeight(percent), new Edge(weight, Edges.ElementAt(i).Item2.end, Edges.ElementAt(i).Item2.startComp, Edges.ElementAt(i).Item2.endComp)));
+                        Edges.Remove(Edges.ElementAt(i));
                     }
 
                 }
